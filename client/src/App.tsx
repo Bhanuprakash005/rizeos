@@ -7,7 +7,7 @@ import FeedPage from './pages/FeedPage'
 import ProfilePage from './pages/ProfilePage'
 import HomePage from './pages/HomePage'
 import JobsPage from './pages/JobsPage'
-import DashboardPage from './pages/DashboardPage'
+import JobDetailPage from './pages/JobDetailPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import WalletContextProvider from './contexts/WalletContextProvider'
 
@@ -37,7 +37,7 @@ function App() {
               <Route index element={<FeedPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/jobs" element={<JobsPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/jobs/:id" element={<JobDetailPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
