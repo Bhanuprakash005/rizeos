@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<'seeker' | 'recruiter'>('seeker')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -16,7 +17,7 @@ export default function RegisterPage() {
     setError(null)
     setLoading(true)
     try {
-      await register(name, email, password)
+      await register(name, email, password, role)
       navigate('/profile')
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Registration failed')
@@ -35,22 +36,26 @@ export default function RegisterPage() {
             <p className="text-gray-400 text-sm mt-1">Join DevLink</p>
           </div>
           <div className="bg-white/5 backdrop-blur rounded-2xl border border-white/10 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.25)]">
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button type="button" onClick={() => setRole('seeker')} className={`rounded-lg py-2 border ${role==='seeker' ? 'bg-indigo-600/80 border-indigo-400 text-white' : 'bg-black/40 border-white/10 text-gray-300'}`}>Seeker</button>
+              <button type="button" onClick={() => setRole('recruiter')} className={`rounded-lg py-2 border ${role==='recruiter' ? 'bg-pink-600/80 border-pink-400 text-white' : 'bg-black/40 border-white/10 text-gray-300'}`}>Recruiter</button>
+            </div>
             <form onSubmit={onSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm text-gray-300 mb-1">Name</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} required className="w-full rounded-xl bg-black/40 border border-white/10 px-3 py-2 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" />
+                <input value={name} onChange={(e) => setName(e.target.value)} required className={`w-full rounded-xl border px-3 py-2 outline-none transition ${role==='recruiter' ? 'bg-black/40 border-pink-400/30 focus:border-pink-500 focus:ring-1 focus:ring-pink-500' : 'bg-black/40 border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`} />
               </div>
               <div>
                 <label className="block text-sm text-gray-300 mb-1">Email</label>
-                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required className="w-full rounded-xl bg-black/40 border border-white/10 px-3 py-2 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required className={`w-full rounded-xl border px-3 py-2 outline-none transition ${role==='recruiter' ? 'bg-black/40 border-pink-400/30 focus:border-pink-500 focus:ring-1 focus:ring-pink-500' : 'bg-black/40 border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`} />
               </div>
               <div>
                 <label className="block text-sm text-gray-300 mb-1">Password</label>
-                <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required className="w-full rounded-xl bg-black/40 border border-white/10 px-3 py-2 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" />
+                <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required className={`w-full rounded-xl border px-3 py-2 outline-none transition ${role==='recruiter' ? 'bg-black/40 border-pink-400/30 focus:border-pink-500 focus:ring-1 focus:ring-pink-500' : 'bg-black/40 border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`} />
               </div>
               {error && <div className="text-red-400 text-sm">{error}</div>}
-              <button disabled={loading} className="w-full bg-indigo-600/90 hover:bg-indigo-600 active:bg-indigo-700 transition-colors rounded-xl py-2 font-medium">
-                {loading ? 'Creating account...' : 'Register'}
+              <button disabled={loading} className={`w-full transition-colors rounded-xl py-2 font-medium ${role==='recruiter' ? 'bg-pink-600/90 hover:bg-pink-600 active:bg-pink-700' : 'bg-indigo-600/90 hover:bg-indigo-600 active:bg-indigo-700'}`}>
+                {loading ? (role==='recruiter' ? 'Creating recruiter account...' : 'Creating account...') : (role==='recruiter' ? 'Register as Recruiter' : 'Register')}
               </button>
             </form>
             <div className="text-sm text-gray-400 mt-4 text-center">

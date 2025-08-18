@@ -1,14 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 
-type User = { id: string; name: string; email: string }
+type User = { id: string; name: string; email: string; role: 'seeker' | 'recruiter' }
 
 type AuthContextValue = {
   token: string | null
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string) => Promise<void>
+  login: (email: string, password: string, role?: 'seeker' | 'recruiter') => Promise<void>
+  register: (name: string, email: string, password: string, role?: 'seeker' | 'recruiter') => Promise<void>
   logout: () => void
 }
 
@@ -51,15 +51,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     load()
   }, [])
 
-  const login = async (email: string, password: string) => {
-    const { data } = await api.post('/api/auth/login', { email, password })
+  const login = async (email: string, password: string, role: 'seeker' | 'recruiter' = 'seeker') => {
+    const { data } = await api.post('/api/auth/login', { email, password, role })
     setUser(data.user)
     setToken(data.token)
     localStorage.setItem('token', data.token)
   }
 
-  const register = async (name: string, email: string, password: string) => {
-    const { data } = await api.post('/api/auth/register', { name, email, password })
+  const register = async (name: string, email: string, password: string, role: 'seeker' | 'recruiter' = 'seeker') => {
+    const { data } = await api.post('/api/auth/register', { name, email, password, role })
     setUser(data.user)
     setToken(data.token)
     localStorage.setItem('token', data.token)
