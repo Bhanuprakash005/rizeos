@@ -2,14 +2,16 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'DEV_ONLY_CHANGE_ME_SECRET';
+
 function generateToken(userId) {
-	return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+	return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '7d' });
 }
 
 // POST /api/auth/register
 async function registerUser(req, res) {
 	try {
-		const { name, email, password } = req.body;
+		const { name, email, password, role } = req.body;
 		if (!name || !email || !password) {
 			return res.status(400).json({ message: 'Please provide name, email and password' });
 		}
@@ -22,11 +24,12 @@ async function registerUser(req, res) {
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
 
-		const user = await User.create({ name, email, password: hashedPassword });
+		const sanitizedRole = role === 'recruiter' ? 'recruiter' : 'seeker';
+		const user = await User.create({ name, email, password: hashedPassword, role: sanitizedRole });
 		const token = generateToken(user._id);
 
 		return res.status(201).json({
-			user: { id: user._id, name: user.name, email: user.email },
+			user: { id: user._id, name: user.name, email: user.email, role: user.role },
 			token
 		});
 	} catch (error) {
@@ -37,7 +40,7 @@ async function registerUser(req, res) {
 // POST /api/auth/login
 async function loginUser(req, res) {
 	try {
-		const { email, password } = req.body;
+		const { email, password, role } = req.body;
 		if (!email || !password) {
 			return res.status(400).json({ message: 'Please provide email and password' });
 		}
@@ -48,8 +51,15 @@ async function loginUser(req, res) {
 		const isMatch = await bcrypt.compare(password, user.password);
 		if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
+		const accountRole = user.role || 'seeker';
+		if (role && role !== accountRole) {
+			return res.status(400).json({
+				message: `This email is registered as ${accountRole}. Select '${accountRole}' to log in, or register a new account as '${role}'.`
+			});
+		}
+
 		const token = generateToken(user._id);
-		return res.json({ user: { id: user._id, name: user.name, email: user.email }, token });
+		return res.json({ user: { id: user._id, name: user.name, email: user.email, role: accountRole }, token });
 	} catch (error) {
 		return res.status(500).json({ message: 'Server error', error: error.message });
 	}
