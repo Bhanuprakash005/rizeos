@@ -9,6 +9,11 @@ export type Post = {
   skills?: string[]
   budget?: number
   transactionSignature?: string
+  location?: string
+  tags?: string[]
+  companyName?: string
+  companyWebsite?: string
+  requirements?: string[]
   createdAt?: string
 }
 

@@ -1,14 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 
-type User = { id: string; name: string; email: string }
+type User = { id: string; name: string; email: string; role: 'seeker' | 'recruiter' }
 
 type AuthContextValue = {
   token: string | null
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string) => Promise<void>
+  register: (name: string, email: string, password: string, role: 'seeker' | 'recruiter') => Promise<void>
   logout: () => void
 }
 
@@ -18,6 +18,11 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
+}
+
+export function useAuthRole() {
+  const { user } = useAuth()
+  return user?.role
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -58,8 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('token', data.token)
   }
 
-  const register = async (name: string, email: string, password: string) => {
-    const { data } = await api.post('/api/auth/register', { name, email, password })
+  const register = async (name: string, email: string, password: string, role: 'seeker' | 'recruiter') => {
+    const { data } = await api.post('/api/auth/register', { name, email, password, role })
     setUser(data.user)
     setToken(data.token)
     localStorage.setItem('token', data.token)

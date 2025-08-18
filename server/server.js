@@ -26,6 +26,7 @@ try {
 	app.use('/api/posts', require('./routes/posts'));
 	app.use('/api/ai', require('./routes/ai'));
 	app.use('/api/payments', require('./routes/payments'));
+	app.use('/api/applications', require('./routes/applications'));
 } catch (err) {
 	// Routes may not exist during initial scaffold
 }

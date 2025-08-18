@@ -37,6 +37,9 @@ export default function ProfilePage() {
       linkedIn: profile.linkedIn || '',
       skills: profile.skills || [],
       walletAddress: profile.walletAddress || publicKey?.toBase58() || '',
+      location: profile.location || '',
+      organisationName: user?.role === 'recruiter' ? (profile.organisationName || '') : undefined,
+      organisationWebsite: user?.role === 'recruiter' ? (profile.organisationWebsite || '') : undefined,
     }
     const updated = await updateMyProfile(token, payload)
     setProfile(updated)
@@ -66,6 +69,7 @@ export default function ProfilePage() {
       <div className="bg-white/5 backdrop-blur border border-white/10 rounded-xl p-5">
         <h2 className="text-xl font-semibold">{user?.name}</h2>
         <p className="text-gray-400">{user?.email}</p>
+        <div className="text-gray-400 text-sm mt-1">Role: {user?.role}</div>
         <div className="mt-4 space-y-2">
           <div>
             <div className="text-gray-400 text-sm">Bio</div>
@@ -87,6 +91,18 @@ export default function ProfilePage() {
             <div className="text-gray-400 text-sm">Wallet</div>
             <div className="text-gray-200">{profile?.walletAddress || '—'}</div>
           </div>
+          {user?.role === 'recruiter' && (
+            <>
+              <div>
+                <div className="text-gray-400 text-sm">Organisation</div>
+                <div className="text-gray-200">{profile?.organisationName || '—'}</div>
+              </div>
+              <div>
+                <div className="text-gray-400 text-sm">Organisation Website</div>
+                <a className="text-purple-300" href={profile?.organisationWebsite} target="_blank">{profile?.organisationWebsite || '—'}</a>
+              </div>
+            </>
+          )}
         </div>
         <button onClick={() => setOpen(true)} className="mt-4 bg-purple-600/80 hover:bg-purple-600 rounded-lg px-4 py-2">Edit Profile</button>
       </div>
@@ -116,6 +132,18 @@ export default function ProfilePage() {
               <button onClick={onNormalizeLocation} className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm">Normalize</button>
             </div>
           </div>
+          {user?.role === 'recruiter' && (
+            <>
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">Organisation Name</label>
+                <input value={profile?.organisationName || ''} onChange={(e) => setProfile({ ...profile, organisationName: e.target.value })} className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">Organisation Website</label>
+                <input value={profile?.organisationWebsite || ''} onChange={(e) => setProfile({ ...profile, organisationWebsite: e.target.value })} className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2" />
+              </div>
+            </>
+          )}
           <div>
             <label className="block text-sm text-gray-300 mb-1">Skills</label>
             <input value={(profile?.skills || []).join(', ')} onChange={(e) => setProfile({ ...profile, skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2" />

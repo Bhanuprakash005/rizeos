@@ -1,4 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Profile = require('../models/Profile');
+const User = require('../models/User');
+const Post = require('../models/Post');
 
 const SKILLS = [
 	"React","JavaScript","TypeScript","Node.js","Express","MongoDB","Mongoose","GraphQL","Redux","Next.js","Tailwind","Jest","Cypress","Python","Django","Flask","FastAPI","TensorFlow","PyTorch","Java","Spring","Kotlin","Swift","C","C++","C#",".NET","Go","Rust","Solidity","Web3","Ethers.js","Hardhat","Solana","Anchor","PostgreSQL","MySQL","SQLite","Redis","Kafka","Docker","Kubernetes","AWS","GCP","Azure","Terraform","GitHub Actions","Linux","Nginx","Figma","UI/UX","Agile","Scrum","Storybook","Turborepo","Microservices"
@@ -83,5 +86,82 @@ async function areLocationsNear(req, res) {
 }
 
 module.exports.areLocationsNear = areLocationsNear;
+
+// POST /api/ai/match-candidates
+// Body: { jobId }
+async function matchCandidates(req, res) {
+	try {
+		const { jobId } = req.body || {};
+		if (!jobId) return res.status(400).json({ message: 'jobId is required' });
+		const job = await Post.findById(jobId);
+		if (!job) return res.status(404).json({ message: 'Job not found' });
+		if (job.type !== 'job') return res.status(400).json({ message: 'Post is not a job' });
+
+		const jobSkills = (job.skills || []).map((s) => String(s).toLowerCase());
+		const jobLocation = job.location || '';
+
+		// Fetch seeker users and their profiles
+		const seekers = await User.find({ role: 'seeker' }).select('_id name email');
+		const seekerIds = seekers.map((u) => u._id);
+		const profiles = await Profile.find({ user: { $in: seekerIds } }).populate('user', 'name email');
+
+		const scored = profiles.map((p) => {
+			const seekerSkills = (p.skills || []).map((s) => String(s).toLowerCase());
+			const overlap = seekerSkills.filter((s) => jobSkills.includes(s)).length;
+			const near = jobLocation && p.location ? p.location.toLowerCase().includes(String(jobLocation).toLowerCase()) : false;
+			const score = overlap * 2 + (near ? 3 : 0);
+			return { profile: p, score, overlap, near };
+		}).sort((a, b) => b.score - a.score);
+
+		const top = scored.slice(0, 5);
+
+		// Build summaries with Gemini if available
+		const genAI = buildGenAI();
+		let summaries = [];
+		if (genAI && top.length) {
+			try {
+				const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+				const prompts = top.map(({ profile, overlap, near }) => (
+					`Summarize why this candidate fits the job in one short sentence. ` +
+					`Candidate skills: ${profile.skills?.join(', ') || 'none'}. ` +
+					`Job skills: ${job.skills?.join(', ') || 'none'}. ` +
+					`Location match: ${near ? 'near' : 'unknown'}. ` +
+					`Focus on overlap and location.`
+				));
+				// Sequentially generate to keep it simple and avoid rate limits
+				for (const prompt of prompts) {
+					try {
+						const result = await model.generateContent(prompt);
+						summaries.push(result.response.text().trim());
+					} catch { summaries.push('Strong skills overlap with job requirements.'); }
+				}
+			} catch {
+				summaries = top.map(() => 'Strong skills overlap with job requirements.');
+			}
+		} else {
+			summaries = top.map(() => 'Strong skills overlap with job requirements.');
+		}
+
+		const result = top.map((t, idx) => ({
+			candidate: {
+				id: t.profile.user._id,
+				name: t.profile.user.name,
+				email: t.profile.user.email,
+				skills: t.profile.skills || [],
+				location: t.profile.location || ''
+			},
+			score: t.score,
+			overlap: t.overlap,
+			near: t.near,
+			summary: summaries[idx] || ''
+		}));
+
+		return res.json({ candidates: result });
+	} catch (error) {
+		return res.status(500).json({ message: 'Server error', error: error.message });
+	}
+}
+
+module.exports.matchCandidates = matchCandidates;
 
 

@@ -10,7 +10,10 @@ const postSchema = new mongoose.Schema(
 		budget: { type: Number },
 		transactionSignature: { type: String },
 		location: { type: String, default: '' },
-		tags: { type: [String], default: [] }
+		tags: { type: [String], default: [] },
+		companyName: { type: String, default: '' },
+		companyWebsite: { type: String, default: '' },
+		requirements: { type: [String], default: [] }
 	},
 	{ timestamps: true }
 );

@@ -2,16 +2,16 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-function generateToken(userId) {
-	return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+function generateToken(user) {
+	return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
 
 // POST /api/auth/register
 async function registerUser(req, res) {
 	try {
-		const { name, email, password } = req.body;
-		if (!name || !email || !password) {
-			return res.status(400).json({ message: 'Please provide name, email and password' });
+		const { name, email, password, role } = req.body;
+		if (!name || !email || !password || !role) {
+			return res.status(400).json({ message: 'Please provide name, email, password and role' });
 		}
 
 		const existing = await User.findOne({ email });
@@ -22,11 +22,11 @@ async function registerUser(req, res) {
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
 
-		const user = await User.create({ name, email, password: hashedPassword });
-		const token = generateToken(user._id);
+		const user = await User.create({ name, email, password: hashedPassword, role });
+		const token = generateToken(user);
 
 		return res.status(201).json({
-			user: { id: user._id, name: user.name, email: user.email },
+			user: { id: user._id, name: user.name, email: user.email, role: user.role },
 			token
 		});
 	} catch (error) {
@@ -48,8 +48,8 @@ async function loginUser(req, res) {
 		const isMatch = await bcrypt.compare(password, user.password);
 		if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-		const token = generateToken(user._id);
-		return res.json({ user: { id: user._id, name: user.name, email: user.email }, token });
+		const token = generateToken(user);
+		return res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role }, token });
 	} catch (error) {
 		return res.status(500).json({ message: 'Server error', error: error.message });
 	}
@@ -60,7 +60,7 @@ async function getMe(req, res) {
 	try {
 		const user = await User.findById(req.user.id).select('-password');
 		if (!user) return res.status(404).json({ message: 'User not found' });
-		return res.json(user);
+		return res.json({ id: user._id, name: user.name, email: user.email, role: user.role });
 	} catch (error) {
 		return res.status(500).json({ message: 'Server error', error: error.message });
 	}

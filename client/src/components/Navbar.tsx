@@ -3,19 +3,30 @@ import { useAuth } from '../contexts/AuthContext'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 
 export default function Navbar() {
-  const { token, logout } = useAuth()
+  const { token, logout, user } = useAuth()
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/70 backdrop-blur border-b border-slate-200/70">
+    <header className="sticky top-0 z-40 w-full backdrop-blur bg-black/40 border-b border-white/10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="font-semibold text-lg text-slate-900">DevLink</Link>
+        <Link to="/" className="font-semibold text-lg text-white">DevLink</Link>
         <nav className="flex gap-6 items-center">
           {token ? (
             <>
-              <NavLink to="/" className={({ isActive }) => `text-sm ${isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>Feed</NavLink>
-              <NavLink to="/jobs" className={({ isActive }) => `text-sm ${isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>Jobs</NavLink>
-              <NavLink to="/dashboard" className={({ isActive }) => `text-sm ${isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>Dashboard</NavLink>
-              <NavLink to="/profile" className={({ isActive }) => `text-sm ${isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>Profile</NavLink>
-              <button onClick={logout} className="text-sm text-slate-500 hover:text-slate-900">Logout</button>
+              {user?.role === 'seeker' && (
+                <>
+                  <NavLink to="/" className={({ isActive }) => `text-sm ${isActive ? 'text-white' : 'text-gray-300 hover:text-white'}`}>Home</NavLink>
+                  <NavLink to="/jobs" className={({ isActive }) => `text-sm ${isActive ? 'text-white' : 'text-gray-300 hover:text-white'}`}>Jobs</NavLink>
+                  <NavLink to="/profile" className={({ isActive }) => `text-sm ${isActive ? 'text-white' : 'text-gray-300 hover:text-white'}`}>Profile</NavLink>
+                </>
+              )}
+              {user?.role === 'recruiter' && (
+                <>
+                  <NavLink to="/" className={({ isActive }) => `text-sm ${isActive ? 'text-white' : 'text-gray-300 hover:text-white'}`}>Home</NavLink>
+                  <NavLink to="/post-job" className={({ isActive }) => `text-sm ${isActive ? 'text-white' : 'text-gray-300 hover:text-white'}`}>Post a Job</NavLink>
+                  <NavLink to="/jobs" className={({ isActive }) => `text-sm ${isActive ? 'text-white' : 'text-gray-300 hover:text-white'}`}>My Job Postings</NavLink>
+                  <NavLink to="/profile" className={({ isActive }) => `text-sm ${isActive ? 'text-white' : 'text-gray-300 hover:text-white'}`}>Profile</NavLink>
+                </>
+              )}
+              <button onClick={logout} className="text-sm text-gray-300 hover:text-white">Logout</button>
             </>
           ) : (
             <>
@@ -24,9 +35,11 @@ export default function Navbar() {
               <NavLink to="/register" className={({ isActive }) => `text-sm ${isActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>Register</NavLink>
             </>
           )}
-          <div className="ml-2">
-            <WalletMultiButton className="!bg-violet-600/90 hover:!bg-violet-600 !text-white !rounded-lg" />
-          </div>
+          {user?.role === 'recruiter' && (
+            <div className="ml-2">
+              <WalletMultiButton className="!bg-purple-600/80 hover:!bg-purple-600 !text-white !rounded-lg" />
+            </div>
+          )}
         </nav>
       </div>
     </header>

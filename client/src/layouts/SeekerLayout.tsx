@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 
-export default function MainLayout() {
+export default function SeekerLayout() {
   return (
     <div className="min-h-screen text-white bg-[#0b0f14]">
       <Navbar />
@@ -11,5 +11,6 @@ export default function MainLayout() {
     </div>
   )
 }
+
 
 

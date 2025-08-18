@@ -7,7 +7,9 @@ const profileSchema = new mongoose.Schema(
 		linkedIn: { type: String, default: '' },
 		skills: { type: [String], default: [] },
 		walletAddress: { type: String, unique: true, sparse: true },
-		location: { type: String, default: '' }
+		location: { type: String, default: '' },
+		organisationName: { type: String, default: '' },
+		organisationWebsite: { type: String, default: '' }
 	},
 	{ timestamps: true }
 );

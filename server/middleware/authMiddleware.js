@@ -12,7 +12,7 @@ function protect(req, res, next) {
 
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
-		req.user = { id: decoded.id };
+		req.user = { id: decoded.id, role: decoded.role };
 		return next();
 	} catch (error) {
 		return res.status(401).json({ message: 'Not authorized, token invalid' });
